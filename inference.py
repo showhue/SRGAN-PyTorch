@@ -17,6 +17,7 @@ import os
 import cv2
 import torch
 from torch import nn
+from tqdm import tqdm
 
 import imgproc
 import model
@@ -60,17 +61,21 @@ def main(args):
 
     # Start the verification mode of the model.
     sr_model.eval()
+    for root, _, files in os.walk(args.inputs_path):
+        for f in tqdm(files):
+            filename, ext = os.path.splitext(f)
+            filepath = os.path.join(root, f)
 
-    lr_tensor = imgproc.preprocess_one_image(args.inputs_path, device)
+            lr_tensor = imgproc.preprocess_one_image(filepath, device)
 
-    # Use the model to generate super-resolved images
-    with torch.no_grad():
-        sr_tensor = sr_model(lr_tensor)
+            # Use the model to generate super-resolved images
+            with torch.no_grad():
+                sr_tensor = sr_model(lr_tensor)
 
-    # Save image
-    sr_image = imgproc.tensor_to_image(sr_tensor, False, False)
-    sr_image = cv2.cvtColor(sr_image, cv2.COLOR_RGB2BGR)
-    cv2.imwrite(args.output_path, sr_image)
+            # Save image
+            sr_image = imgproc.tensor_to_image(sr_tensor, False, False)
+            sr_image = cv2.cvtColor(sr_image, cv2.COLOR_RGB2BGR)
+            cv2.imwrite(os.path.join(args.output_path, f"{filename}.{ext}"), sr_image)
 
     print(f"SR image save to `{args.output_path}`")
 
@@ -82,19 +87,19 @@ if __name__ == "__main__":
                         default="srresnet_x4")
     parser.add_argument("--inputs_path",
                         type=str,
-                        default="./figure/comic_lr.png",
-                        help="Low-resolution image path.")
+                        default="test_images",
+                        help="Low-resolution input images path.")
     parser.add_argument("--output_path",
                         type=str,
-                        default="./figure/comic_sr.png",
-                        help="Super-resolution image path.")
+                        default="output",
+                        help="Super-resolution output images path.")
     parser.add_argument("--model_weights_path",
                         type=str,
-                        default="./results/pretrained_models/SRGAN_x4-ImageNet-8c4a7569.pth.tar",
+                        default="./results/pretrained_models/SRResNet_x4-ImageNet-6dd5216c.pth.tar",
                         help="Model weights file path.")
     parser.add_argument("--device_type",
                         type=str,
-                        default="cpu",
+                        default="cuda",
                         choices=["cpu", "cuda"])
     args = parser.parse_args()
 
