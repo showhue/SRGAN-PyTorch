@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  srgan-pytorch:
+    build: srgan-pytorch
+    tty: true
+    volumes:
+      - ..:/home/user/project
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - capabilities: [gpu]
+    command: >
+      sh -c "cd /home/user/project &&
+             python inference.py"
+
