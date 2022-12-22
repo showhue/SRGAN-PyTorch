@@ -11,7 +11,7 @@ services:
         reservations:
           devices:
           - capabilities: [gpu]
+    working_dir: /home/user/project
     command: >
-      sh -c "cd /home/user/project &&
-             python inference.py"
+      sh -c "python inference.py"
 
